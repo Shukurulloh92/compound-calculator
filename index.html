@@ -8,9 +8,10 @@
 <meta property="og:title" content="Murakkab foiz kalkulyatori — so'mda">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#378ADD">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Foiz Kalk.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Foiz Kalk.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%23378ADD'/><text y='.9em' font-size='75' x='12'>📈</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -59,6 +60,8 @@ input[type=range]{width:100%;accent-color:#378ADD;}
   .scenario-card p{color:#e8e8e2!important;}
   .scenario-sub{color:#888780!important;}
 }
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -67,39 +70,21 @@ input[type=range]{width:100%;accent-color:#378ADD;}
 <div style="padding:.5rem 0 1.5rem;display:flex;justify-content:space-between;align-items:flex-start;">
   <div>
     <h1 style="font-size:20px;font-weight:500;margin:0 0 4px;">Murakkab foiz kalkulyatori</h1>
-    <p style="font-size:13px;color:#888780;margin:0;">Depozit · Inflyatsiya · Dividend solig'i</p>
+    <p style="font-size:13px;color:#888780;margin:0;">Depozit · Inflyatsiya · Foyda taqsimoti</p>
   </div>
-  <button id="shareBtn" onclick="saveToURL()" class="btn" style="padding:6px 14px;font-size:12px;white-space:nowrap;margin-top:4px;">🔗 Link</button>
+  <div style="display:flex;gap:8px;margin-top:4px;">
+    <button onclick="resetAll()" class="btn" style="padding:6px 12px;font-size:12px;white-space:nowrap;background:#fcebeb;color:#A32D2D;border-color:#F09595;">↺ Qayta o'rnatish</button>
+    <button id="shareBtn" onclick="saveToURL()" class="btn" style="padding:6px 14px;font-size:12px;white-space:nowrap;">🔗 Link</button>
+  </div>
 </div>
 
-<!-- MAQSAD REJIMI -->
-<div class="sec" style="margin-bottom:1.25rem;border:0.5px solid #85b7eb;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <p style="font-size:14px;font-weight:500;margin:0;">Maqsad rejimi</p>
-    <span style="font-size:11px;color:#888780;">Kerakli oylik to'lovni hisoblaydi</span>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-    <div>
-      <label class="cl">Maqsad summa</label>
-      <input class="ni" type="text" id="goalAmt" value="50 000 000" inputmode="numeric" style="width:100%;">
-      <p class="hint">so'm</p>
-    </div>
-    <div>
-      <label class="cl">Muddat (oy)</label>
-      <input class="ni" type="text" id="goalMonths" value="13" inputmode="numeric" style="width:100%;">
-      <p class="hint">oy</p>
-    </div>
-  </div>
-  <button onclick="calcGoal()" class="btn" style="width:100%;padding:9px;font-size:13px;background:#e6f1fb;border-color:#85b7eb;color:#185FA5;">
-    Hisoblash va parametrlarni avtomatik o'rnatish
-  </button>
-  <div id="goalResult" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;font-size:13px;"></div>
-</div>
+
 
 <!-- TABS -->
 <div style="display:flex;gap:6px;margin-bottom:1.25rem;border-bottom:0.5px solid #d3d1c7;padding-bottom:1rem;">
-  <button class="btn on" onclick="setMode('single')" id="tab-single" style="padding:7px 18px;">Hisoblash</button>
-  <button class="btn" onclick="setMode('compare')" id="tab-compare" style="padding:7px 18px;">Solishtirish</button>
+  <button class="btn on" onclick="setMode('single')" id="tab-single" style="padding:7px 18px;display:flex;align-items:center;gap:6px;">📈 <span>Hisoblash</span></button>
+  <button class="btn" onclick="setMode('compare')" id="tab-compare" style="padding:7px 18px;display:flex;align-items:center;gap:6px;">⚖️ <span>Solishtirish</span></button>
+  <button class="btn" onclick="setMode('goal')" id="tab-goal" style="padding:7px 18px;display:flex;align-items:center;gap:6px;">🎯 <span>Maqsad</span></button>
 </div>
 
 <!-- TARIF -->
@@ -113,6 +98,7 @@ input[type=range]{width:100%;accent-color:#378ADD;}
   </div>
   <div style="margin-top:8px;padding:9px 12px;background:#eeeee8;border-radius:10px;font-size:13px;color:#5f5e5a;display:flex;flex-wrap:wrap;gap:10px;">
     <span id="pRange"></span><span id="pSplit"></span>
+    <span id="pRange"></span><span id="pSplit"></span>
     <span id="pRate" style="color:#185FA5;font-weight:500;"></span>
   </div>
   <div id="rWarn" style="display:none;margin-top:6px;padding:7px 12px;background:#faeeda;border-radius:8px;font-size:12px;color:#633806;"></div>
@@ -124,37 +110,51 @@ input[type=range]{width:100%;accent-color:#378ADD;}
 <div id="sDiv">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
     <div class="card">
-      <p class="lbl">Yakuniy balans (nominal)</p>
+      <p class="lbl" title="Sarmoyangizning kelajakdagi nominal (raqamli) qiymati">Yakuniy balans (nominal)</p>
       <p class="val" id="s-fn">—</p>
-      <p class="hint" id="s-fnHint">netto, har oy chegirilgan</p>
+      <p class="hint" id="s-fnHint">foyda har oy kiritilgan</p>
     </div>
     <div class="cinfo">
-      <p class="lbl" style="color:#185FA5;">Yakuniy balans (real)</p>
+      <p class="lbl" style="color:#185FA5;" title="Sarmoyangizning bugungi xarid quvvatidagi qiymati (Inflyatsiyadan keyin)">Yakuniy balans (real)</p>
       <p class="val" id="s-fr">—</p>
       <p class="hint" id="s-frHint">bugungi so'm quvvatida</p>
     </div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
     <div class="card"><p class="lbl">Jami kiritilgan</p><p class="val" id="s-dep">—</p><p class="hint" id="s-deph"></p></div>
-    <div class="card"><p class="lbl">Netto foiz daromadi</p><p class="val" id="s-int">—</p><p class="hint" id="s-inth"></p></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-    <div class="sec">
-      <p class="lbl">Netto effektiv stavka</p>
-      <p style="font-size:20px;font-weight:500;margin:2px 0 4px;" id="s-eff">—</p>
-      <p class="hint" id="s-efff"></p>
+    <div class="card" title="Kiritilgan barcha sarmoyadan tushgan jami nominal foyda">
+      <p class="lbl">Foiz daromadi</p>
+      <p class="val" id="s-int">—</p>
+      <p class="hint" id="s-inth"></p>
     </div>
-    <div class="sec" id="s-beCard">
-      <p class="lbl">Break-even</p>
-      <p style="font-size:20px;font-weight:500;margin:2px 0 4px;" id="s-be">—</p>
-      <p class="hint" id="s-beh"></p>
-      <div style="margin-top:8px;height:4px;border-radius:2px;background:#d3d1c7;overflow:hidden;">
-        <div id="s-beBar" style="height:100%;border-radius:2px;width:0%;transition:width .4s;"></div>
+  </div>
+  </div>
+
+  <div id="gDiv" style="display:none;margin-bottom:1.25rem;">
+    <div class="sec" style="border:0.5px solid #85b7eb;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <p style="font-size:14px;font-weight:500;margin:0;">Maqsad rejimi</p>
+        <span style="font-size:11px;color:#888780;">Kerakli oylik to'lovni hisoblaydi</span>
       </div>
-      <p class="hint" style="margin-top:3px;" id="s-beBarH"></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label class="cl">Maqsad summa</label>
+          <input class="ni" type="text" id="goalAmt" value="50 000 000" inputmode="numeric" style="width:100%;">
+          <p class="hint">so'm</p>
+        </div>
+        <div>
+          <label class="cl">Muddat (oy)</label>
+          <input class="ni" type="text" id="goalMonths" value="13" inputmode="numeric" style="width:100%;">
+          <p class="hint">oy</p>
+        </div>
+      </div>
+      <button onclick="calcGoal()" class="btn" style="width:100%;padding:9px;font-size:13px;background:#e6f1fb;border-color:#85b7eb;color:#185FA5;">
+        Hisoblash va parametrlarni avtomatik o'rnatish
+      </button>
+      <div id="goalResult" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;font-size:13px;"></div>
     </div>
   </div>
-  <div id="s-rn" style="display:none;padding:9px 12px;background:#eeeee8;border-radius:10px;font-size:13px;color:#5f5e5a;margin-bottom:1rem;"><span id="s-rnt"></span></div>
+
 </div>
 
 <!-- COMPARE -->
@@ -167,8 +167,6 @@ input[type=range]{width:100%;accent-color:#378ADD;}
       <div style="border-top:0.5px solid #d3d1c7;padding-top:10px;display:flex;flex-direction:column;gap:6px;">
         <div><p class="lbl">Yakuniy balans</p><p class="val" id="c-an">—</p></div>
         <div><p class="lbl">Real balans</p><p class="val" id="c-ar">—</p></div>
-        <div><p class="lbl">Netto stavka</p><p class="val" id="c-ae">—</p></div>
-        <div><p class="lbl">Break-even</p><p class="val" id="c-ab">—</p></div>
         <div><p class="lbl">Foiz daromadi</p><p class="val" id="c-ai">—</p></div>
       </div>
     </div>
@@ -186,8 +184,6 @@ input[type=range]{width:100%;accent-color:#378ADD;}
       <div style="border-top:0.5px solid #d3d1c7;padding-top:10px;display:flex;flex-direction:column;gap:6px;">
         <div><p class="lbl">Yakuniy balans</p><p class="val" id="c-bn">—</p></div>
         <div><p class="lbl">Real balans</p><p class="val" id="c-br">—</p></div>
-        <div><p class="lbl">Netto stavka</p><p class="val" id="c-be2">—</p></div>
-        <div><p class="lbl">Break-even</p><p class="val" id="c-bb">—</p></div>
         <div><p class="lbl">Foiz daromadi</p><p class="val" id="c-bi">—</p></div>
       </div>
     </div>
@@ -281,9 +277,9 @@ input[type=range]{width:100%;accent-color:#378ADD;}
 
   <div class="sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <p style="font-size:14px;font-weight:500;margin:0;">Qo'shimcha mablag'</p>
+      <p style="font-size:14px;font-weight:500;margin:0;" title="Boshlang'ich depozitdan tashqari muntazam ravishda qo'shiladigan mablag'">Qo'shimcha mablag'</p>
       <div id="iaWrap" style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:#888780;" id="iaTL">Doimiy miqdor</span>
+        <span style="font-size:12px;color:#888780;" id="iaTL" title="Har yili to'lov miqdorini inflyatsiya darajasida oshirish">Doimiy miqdor</span>
         <div onclick="togIA()" id="iaTr" style="width:38px;height:20px;border-radius:10px;background:#b4b2a9;cursor:pointer;position:relative;transition:background .2s;">
           <div id="iaTh" style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:white;transition:left .2s;"></div>
         </div>
@@ -303,115 +299,87 @@ input[type=range]{width:100%;accent-color:#378ADD;}
     </div>
     <input type="range" id="cS" min="0" max="18" step="1" value="8">
     <div class="re"><span>0</span><span>10 000 000</span></div>
-    <div id="eqB" style="display:none;margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;border:0.5px solid #d3d1c7;font-size:12px;color:#5f5e5a;">
-      <span id="eqN"></span><span id="iaN" style="display:block;margin-top:3px;color:#888780;"></span>
+    <div id="eqB" style="display:none;margin-top:10px;padding:12px 14px;background:rgba(255,255,255,0.5);border-radius:10px;border:0.5px solid rgba(0,0,0,0.05);font-size:13px;color:#1a1a18;line-height:1.4;">
+      <span id="eqN" style="font-weight:500;display:block;margin-bottom:2px;"></span>
+      <span id="iaN" style="display:block;font-size:11px;color:#5f5e5a;"></span>
     </div>
   </div>
 
-  <div class="sec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <label class="cl" style="margin:0;">Murakkablashish</label>
-      <div style="display:flex;gap:5px;">
-        <button class="btn sb on" onclick="setCmpM('linked')" id="cm-linked">Bog'liq</button>
-        <button class="btn sb" onclick="setCmpM('unlinked')" id="cm-unlinked">Mustaqil</button>
+  <!-- Uchta asosiy sozlama yonma-yon -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:0.75rem;margin-bottom:1rem;">
+    
+    <div class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <label class="cl" style="margin:0;" title="Olingan foydani yana sarmoyaga qo'shib borish (Murakkab foiz)">Murakkablashish</label>
+        <div style="display:flex;gap:4px;">
+          <button class="btn sb on" onclick="setCmpM('linked')" id="cm-linked" style="padding:4px 8px;min-width:65px;">Bog'liq</button>
+          <button class="btn sb" onclick="setCmpM('unlinked')" id="cm-unlinked" style="padding:4px 8px;min-width:65px;">Mustaqil</button>
+        </div>
       </div>
+      <div id="cmInfo" style="font-size:12px;color:#888780;padding:2px 0;"></div>
+      <div id="cmSlider" style="display:none;">
+        <input type="range" id="cmS" min="1" max="4" step="1" value="3" style="margin-bottom:4px;">
+      </div>
+      <p style="font-size:18px;font-weight:500;margin:4px 0 0;" id="cmOut">Oylik</p>
     </div>
-    <div id="cmInfo" style="font-size:13px;color:#888780;padding:4px 0;"></div>
-    <div id="cmSlider" style="display:none;">
-      <input type="range" id="cmS" min="1" max="4" step="1" value="3" style="margin-bottom:4px;">
-      <div class="re"><span>Yillik</span><span>Kunlik</span></div>
-    </div>
-    <p style="font-size:18px;font-weight:500;margin:8px 0 0;" id="cmOut">Oylik</p>
-  </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
     <div class="sec">
       <label class="cl">Inflyatsiya</label>
       <p style="font-size:20px;font-weight:500;margin:0 0 10px;" id="infO">7%</p>
       <input type="range" id="infS" min="0" max="50" step="1" value="7">
       <div class="re"><span>0%</span><span>50%</span></div>
     </div>
+
     <div class="sec">
-      <label class="cl">Dividend solig'i</label>
-      <p style="font-size:20px;font-weight:500;margin:0 0 10px;" id="taxO">5%</p>
-      <input type="range" id="taxS" min="0" max="30" step="1" value="5">
-      <div class="re"><span>0%</span><span>30%</span></div>
-      <p class="hint" id="taxH"></p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <label class="cl" style="margin:0;">Foiz stavkasi</label>
+        <div style="display:flex;gap:4px;">
+          <button class="btn sb on" onclick="setRateMode('auto')" id="rm-auto" style="padding:4px 8px;min-width:55px;">Auto</button>
+          <button class="btn sb" onclick="setRateMode('manual')" id="rm-manual" style="padding:4px 8px;min-width:55px;">O'zingiz</button>
+        </div>
+      </div>
+      <div id="rAutoBlock">
+        <p style="font-size:11px;color:#888780;margin:0 0 2px;">Investor ulushi</p>
+        <p style="font-size:24px;font-weight:500;margin:0;color:#185FA5;" id="rNetto">—</p>
+      </div>
+      <div id="rManualBlock" style="display:none;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <input class="ni" type="text" id="rManualInput" value="20" inputmode="decimal" style="width:60px;font-size:15px;padding:4px;text-align:center;">
+          <span style="font-size:12px;color:#888780;">% yillik</span>
+        </div>
+        <input type="range" id="rManualSlider" min="5" max="50" step="0.1" value="20">
+      </div>
     </div>
-  </div>
 
-  <div class="sec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div>
-        <label class="cl" style="margin:0 0 3px;">Yillik foiz stavkasi</label>
-        <p class="hint" style="margin:0;" id="rModeHint">Avtomatik — jadvaldan olinadi</p>
-      </div>
-      <div style="display:flex;gap:5px;">
-        <button class="btn sb on" onclick="setRateMode('auto')" id="rm-auto">Avtomatik</button>
-        <button class="btn sb" onclick="setRateMode('manual')" id="rm-manual">Mustaqil</button>
-      </div>
-    </div>
-    <!-- Avtomatik: netto ko'rsatiladi, brutto hisoblanadi -->
-    <div id="rAutoBlock">
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
-        <div>
-          <p style="font-size:11px;color:#888780;margin:0 0 2px;">Investor netto (jadval)</p>
-          <p style="font-size:28px;font-weight:500;margin:0;color:#185FA5;" id="rNetto">—</p>
-        </div>
-        <div style="color:#b4b2a9;font-size:20px;">→</div>
-        <div>
-          <p style="font-size:11px;color:#888780;margin:0 0 2px;">Brutto (hisoblangan)</p>
-          <p style="font-size:20px;font-weight:500;margin:0;" id="rBrutto">—</p>
-        </div>
-      </div>
-      <p class="hint" id="rFormula"></p>
-    </div>
-    <!-- Mustaqil: foydalanuvchi brutto kiritadi -->
-    <div id="rManualBlock" style="display:none;">
-      <p style="font-size:11px;color:#888780;margin:0 0 6px;">Yillik brutto stavkani kiriting:</p>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <input class="ni" type="text" id="rManualInput" value="25" inputmode="decimal" style="width:80px;font-size:18px;text-align:center;">
-        <span style="font-size:16px;color:#888780;">%</span>
-        <span style="font-size:13px;color:#888780;">yillik brutto</span>
-      </div>
-      <input type="range" id="rManualSlider" min="5" max="50" step="0.1" value="25" style="width:100%;">
-      <div class="re"><span>5%</span><span>50%</span></div>
-      <div style="display:flex;align-items:baseline;gap:12px;margin-top:10px;">
-        <div>
-          <p style="font-size:11px;color:#888780;margin:0 0 2px;">Brutto (kiritilgan)</p>
-          <p style="font-size:20px;font-weight:500;margin:0;" id="rManualBrutto">—</p>
-        </div>
-        <div style="color:#b4b2a9;font-size:18px;">→</div>
-        <div>
-          <p style="font-size:11px;color:#888780;margin:0 0 2px;">Investor netto</p>
-          <p style="font-size:20px;font-weight:500;margin:0;color:#185FA5;" id="rManualNetto">—</p>
-        </div>
-      </div>
-      <p class="hint" style="margin-top:4px;" id="rManualFormula"></p>
-    </div>
-  </div>
+  </div> <!-- /grid -->
 
-  <div class="sec">
-    <p style="font-size:13px;font-weight:500;color:#888780;margin:0 0 12px;">Bugungi so'm quvvati</p>
+
+
+  <div class="sec" style="background:#eaf3de;border:0.5px solid #1D9E75;">
+    <p style="font-size:13px;font-weight:500;color:#3B6D11;margin:0 0 10px;">Inflyatsiya va xarid quvvati</p>
+    <div id="s-rn" style="display:none;font-size:13px;color:#1a1a18;margin-bottom:12px;line-height:1.4;">
+      <span id="s-rnt"></span>
+    </div>
+    
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
       <div style="background:#fff;border:0.5px solid #d3d1c7;border-radius:10px;padding:.75rem;">
         <p class="lbl">Bugungi miqdor</p>
         <input class="ni" type="text" id="pvI" value="1 000 000" inputmode="numeric" style="width:100%;font-size:15px;padding:5px 8px;margin-top:4px;">
         <p class="hint">so'm</p>
       </div>
-      <div class="card">
+      <div style="background:rgba(255,255,255,0.5);border-radius:10px;padding:.75rem;border:0.5px solid rgba(0,0,0,0.05);">
         <p class="lbl" id="pvL">13 oydan keyin:</p>
         <p style="font-size:17px;font-weight:500;margin:4px 0 0;" id="pvR">—</p>
         <p class="hint" id="pvH"></p>
       </div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:11px;color:#888780;margin-bottom:4px;">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#5f5e5a;margin-bottom:4px;">
       <span>Xarid kuchi saqlanishi</span><span id="pvPct">—</span>
     </div>
     <div style="height:6px;border-radius:3px;background:#d3d1c7;overflow:hidden;">
       <div id="pvBar" style="height:100%;border-radius:3px;width:100%;transition:width .4s;background:#1D9E75;"></div>
     </div>
-    <p class="hint" style="margin-top:5px;" id="pvNote"></p>
+    <p class="hint" style="margin-top:5px;color:#5f5e5a;" id="pvNote"></p>
   </div>
 
 </div>
@@ -436,7 +404,7 @@ const TIERS=[7,13,27,40,60];
 
 // ✅ ia=false by default
 let pl='standard',fr='monthly',ia=false,cpm='linked',chm='balance',md='single',rateMode='auto';
-let manualRate=25; // brutto % mustaqil rejimda
+let manualRate=20; 
 let lastRows=[];
 
 function fmt(v){return Math.round(v).toLocaleString('ru-RU')+' so\'m';}
@@ -449,22 +417,15 @@ function vi(a,v){let b=0,bd=1e15;a.forEach((s,i)=>{const d=Math.abs(s-v);if(d<bd
 function on(id,ids){ids.forEach(x=>{const b=document.getElementById(x);if(b)b.classList.toggle('on',x===id);});}
 function getRate(p,m){const t=RT[p];let c=TIERS[0];for(const x of TIERS){if(m>=x)c=x;}return{rate:t[c],tier:c};}
 
-// ga = investor netto yillik stavkasi (jadvaldan olingan, masalan 19.2%)
-// rateIsNetto=true  → ga netto, gross teskari hisoblanadi
-// rateIsNetto=false → ga brutto, netto undan hisoblanadi (mustaqil rejim)
-function sim(P,bc,ir,tm,ga,pct,tr,frk,rateIsNetto){
+  // ga = investor yillik stavkasi
+function sim(P,bc,ir,tm,ga,pct,frk){
   let in_, gross;
-  if(rateIsNetto){
-    // Jadval stavkasi = investor netto
-    // gross = netto / (pct% × (1-tax%))
-    in_   = Math.pow(1+ga,1/12)-1;                    // oylik netto
-    gross = in_ / ((pct/100)*(1-tr));                 // oylik brutto
-  } else {
-    // Mustaqil rejim: foydalanuvchi brutto kiritgan
-    gross = Math.pow(1+ga,1/12)-1;                    // oylik brutto
-    in_   = gross*(pct/100)*(1-tr);                   // oylik netto
-  }
-  const ib = gross*(pct/100);                         // investor brutto ulushi (oylik)
+  const tr = 0; // Soliq olib tashlandi
+  // Investor oylik stavka
+  in_   = Math.pow(1+ga,1/12)-1;                    
+  // Ichki hisob (companiyaning ulushini bilish uchun)
+  gross = in_ / (pct/100);                 
+  const ib = gross*(pct/100);                         // investor ulushi (oylik)
   const cs = gross*((100-pct)/100);                   // kompaniya ulushi (oylik)
   const nae=(Math.pow(1+in_,12)-1)*100;               // netto effektiv yillik
   const gae=(Math.pow(1+gross,12)-1)*100;             // brutto effektiv yillik
@@ -475,18 +436,20 @@ function sim(P,bc,ir,tm,ga,pct,tr,frk,rateIsNetto){
     const yi=Math.floor((mo-1)/12);
     const mc=bc===0?0:(ia?Math.round(bc*Math.pow(1+ir,yi)):bc);
     const mDep=mc*cpy/12;
-    const iia=bal*in_;        // investor netto foiz bu oy
-    const iba=bal*ib;         // investor brutto foiz bu oy
-    const ta =iba*tr;         // soliq
+    const iia=bal*in_;        // investor foiz bu oy
     const ca =bal*cs;         // kompaniya foiz bu oy
-    bal=bal*(1+in_)+mDep;dep+=mDep;tIN+=iia;tC+=ca;tT+=ta;
+    bal=bal*(1+in_)+mDep;dep+=mDep;tIN+=iia;tC+=ca;
     const rf=Math.pow(1+ir,mo/12),rb=Math.round(bal/rf);
     if(be===null&&rb>=dep)be=mo;
-    rows.push({mo,contrib:mc,mDep,invInt:Math.round(iia),compInt:Math.round(ca),taxAmt:Math.round(ta),nom:Math.round(bal),real:rb,dep:Math.round(dep)});
+    rows.push({mo,contrib:mc,mDep,invInt:Math.round(iia),compInt:Math.round(ca),nom:Math.round(bal),real:rb,dep:Math.round(dep)});
   }
   return{rows,fn:Math.round(bal),fr2:Math.round(bal/Math.pow(1+ir,tm/12)),dep:Math.round(dep),
     tIN:Math.round(tIN),tC:Math.round(tC),tT:Math.round(tT),
-    nae,gae,in_,ib,cs,gross,be};
+    nae,in_,ib,cs,gross,be};
+}
+
+function resetAll(){
+  location.href = location.origin + location.pathname;
 }
 
 // ── Rate mode ──
@@ -497,24 +460,25 @@ function setRateMode(m){
   document.getElementById('rManualBlock').style.display=m==='manual'?'block':'none';
   document.getElementById('rModeHint').textContent=m==='auto'
     ?'Avtomatik — jadvaldan olinadi'
-    :'Mustaqil — brutto stavkani kiriting';
+    :'Mustaqil — netto stavkani kiriting';
   calc();
 }
 
-// Returns {nettoAnnual, bruttoAnnual} in decimals
-function getEffectiveRate(pl2, tm, pct, tr){
-  if(rateMode==='auto'){
-    const nettoAnnual=getRate(pl2,tm).rate/100; // jadval stavkasi = investor netto
+// Returns {nettoAnnual, internalRate} in decimals
+function getEffectiveRate(pl2, tm, pct, forcedMode){
+  const m = forcedMode || rateMode;
+  if(m==='auto'){
+    const nettoAnnual=getRate(pl2,tm).rate/100; 
     const nettoMonthly=Math.pow(1+nettoAnnual,1/12)-1;
-    const bruttoMonthly=nettoMonthly/((pct/100)*(1-tr));
-    const bruttoAnnual=(Math.pow(1+bruttoMonthly,12)-1);
-    return{nettoAnnual,bruttoAnnual};
+    const internalMonthly=nettoMonthly/(pct/100);
+    const internalAnnual=(Math.pow(1+internalMonthly,12)-1);
+    return{nettoAnnual,internalAnnual};
   } else {
-    const bruttoAnnual=manualRate/100;
-    const bruttoMonthly=Math.pow(1+bruttoAnnual,1/12)-1;
-    const nettoMonthly=bruttoMonthly*(pct/100)*(1-tr);
-    const nettoAnnual=(Math.pow(1+nettoMonthly,12)-1);
-    return{nettoAnnual,bruttoAnnual};
+    const nettoAnnual=manualRate/100;
+    const nettoMonthly=Math.pow(1+nettoAnnual,1/12)-1;
+    const internalMonthly=nettoMonthly/(pct/100);
+    const internalAnnual=(Math.pow(1+internalMonthly,12)-1);
+    return{nettoAnnual,internalAnnual};
   }
 }
 
@@ -524,7 +488,7 @@ function updPlan(){
   const p=PM[pl];
   document.getElementById('pRange').textContent='💰 '+p.r;
   document.getElementById('pSplit').textContent='📊 '+p.s;
-  document.getElementById('pRate').textContent='📈 '+rate+'% (netto)';
+  document.getElementById('pRate').textContent='📈 '+rate+'%';
   const w=document.getElementById('rWarn');
   if(m<7){w.style.display='block';w.textContent='⚠️ '+m+' oy — 7 oylik stavka ('+RT[pl][7]+'%) qo\'llanilmoqda.';}
   else w.style.display='none';
@@ -553,7 +517,19 @@ function updCmp(){
   else{document.getElementById('cmOut').textContent=CMAP[+document.getElementById('cmS').value][0];document.getElementById('cmInfo').textContent='';}
 }
 
-function setMode(m){md=m;on('tab-'+m,['tab-single','tab-compare']);document.getElementById('sDiv').style.display=m==='single'?'block':'none';document.getElementById('cDiv').style.display=m==='compare'?'block':'none';calc();}
+function setMode(m){
+  md=m;
+  on('tab-'+m,['tab-single','tab-compare','tab-goal']);
+  
+  const s=document.getElementById('sDiv'),c=document.getElementById('cDiv'),g=document.getElementById('gDiv');
+  [s,c,g].forEach(el=>{el.style.display='none';el.classList.remove('fade-in');});
+  
+  if(m==='single'){ s.style.display='block'; s.classList.add('fade-in'); }
+  if(m==='compare'){ c.style.display='block'; c.classList.add('fade-in'); }
+  if(m==='goal'){ g.style.display='block'; g.classList.add('fade-in'); }
+  
+  calc();
+}
 function setPlan(p){pl=p;on('plan-'+p,['plan-standard','plan-gold','plan-premier','plan-private']);updPlan();calc();}
 function setMo(m){document.getElementById('mS').value=Math.min(m,60);document.getElementById('mI').value=fmtN(m);updMoQ(m);updMoY(m);updPlan();calc();}
 function updMoQ(m){[7,13,27,40,60].forEach(q=>{const b=document.getElementById('mo-'+q);if(b)b.classList.toggle('on',q===+m);});}
@@ -590,7 +566,7 @@ function cpTable(){
 }
 
 function saveToURL(){
-  const params=new URLSearchParams({pl,tm:pi(document.getElementById('mI').value),P:pi(document.getElementById('pI').value),bc:pi(document.getElementById('cI').value),ir:document.getElementById('infS').value,tr:document.getElementById('taxS').value,fr,ia:ia?'1':'0',rm:rateMode,mr:manualRate});
+  const params=new URLSearchParams({pl,tm:pi(document.getElementById('mI').value),P:pi(document.getElementById('pI').value),bc:pi(document.getElementById('cI').value),ir:document.getElementById('infS').value,fr,ia:ia?'1':'0',rm:rateMode,mr:manualRate,md});
   const url=location.origin+location.pathname+'?'+params.toString();
   const btn=document.getElementById('shareBtn');
   if(navigator.clipboard){
@@ -601,56 +577,65 @@ function saveToURL(){
 function loadFromURL(){
   const p=new URLSearchParams(location.search);
   if(!p.has('pl'))return;
-  const PVal=+p.get('P')||10000000,bcVal=+p.get('bc')||1000000,irVal=+p.get('ir')||7,trVal=+p.get('tr')||5;
+  const PVal=+p.get('P')||10000000,bcVal=+p.get('bc')||1000000,irVal=+p.get('ir')||7;
   document.getElementById('pI').value=fmtN(PVal);document.getElementById('pS').value=vi(DEP,PVal);
   document.getElementById('cI').value=fmtN(bcVal);document.getElementById('cS').value=vi(CON,bcVal);
   document.getElementById('infS').value=irVal;document.getElementById('infO').textContent=irVal+'%';
-  document.getElementById('taxS').value=trVal;document.getElementById('taxO').textContent=trVal+'%';
   ia=p.get('ia')==='1';
   document.getElementById('iaTr').style.background=ia?'#378ADD':'#b4b2a9';
   document.getElementById('iaTh').style.left=ia?'19px':'2px';
   document.getElementById('iaTL').textContent=ia?'Inflyatsiyaga bog\'liq':'Doimiy miqdor';
   if(p.has('rm')){
-    manualRate=parseFloat(p.get('mr'))||25;
+    manualRate=parseFloat(p.get('mr'))||20;
     document.getElementById('rManualInput').value=manualRate.toFixed(1);
     document.getElementById('rManualSlider').value=Math.min(manualRate,50);
-    setRateMode(p.get('rm'));
+    setRateMode(p.get('rm'), true);
   }
-  setPlan(p.get('pl')||'standard');setFr(p.get('fr')||'monthly');setMo(+p.get('tm')||13);
+  setPlan(p.get('pl')||'standard', true);
+  setFr(p.get('fr')||'monthly', true);
+  setMo(+p.get('tm')||13, true);
+  if(p.has('md')) setMode(p.get('md'), true);
 }
 
-// ✅ calcGoal — ia ni vaqtinchalik false ga qo'yadi
+// ✅ calcGoal — chastotaga mos to'lovni hisoblaydi
 function calcGoal(){
   const goal=pi(document.getElementById('goalAmt').value)||50000000;
-  const months=Math.max(1,pi(document.getElementById('goalMonths').value)||13);
+  const tm=Math.max(1,pi(document.getElementById('goalMonths').value)||13);
   const ir=+document.getElementById('infS').value/100;
-  const tr=+document.getElementById('taxS').value/100;
   const P=Math.max(0,pi(document.getElementById('pI').value));
   const meta=PM[pl];
-  const{nettoAnnual:goalNetto,bruttoAnnual:goalBrutto}=getEffectiveRate(pl,months,meta.p,tr);
-  const in_=Math.pow(1+goalNetto,1/12)-1;
-  const n=months,factor=Math.pow(1+in_,n);
+  const{nettoAnnual:goalNetto}=getEffectiveRate(pl,tm,meta.p);
+  
+  const py=FR[fr].py;
+  const n_periods = (tm / 12) * py;
+  const r_period = Math.pow(1+goalNetto, 1/py)-1;
+  const factor = Math.pow(1+r_period, n_periods);
 
-  const savedIA=ia;
-  ia=false;
+  // Use a precise loop to find 'mc' (contribution) that accounts for 'ia'
+  let unit_fv = 0;
+  for (let k = 1; k <= n_periods; k++) {
+    const year = Math.floor((k-1)/py);
+    const growth = ia ? Math.pow(1+ir, year) : 1;
+    unit_fv += growth * Math.pow(1+r_period, n_periods - k);
+  }
 
-  let mc=in_===0?(goal-P)/n:(goal-P*factor)*in_/(factor-1);
   const res=document.getElementById('goalResult');
   res.style.display='block';
+  
   if(P*factor>=goal){
     res.style.background='#eaf3de';res.style.color='#3B6D11';
-    res.textContent='✓ Boshlang\'ich depozit yetarli! Qo\'shimcha to\'lovsiz '+months+' oyda '+fmt(Math.round(P*factor))+' bo\'ladi.';
+    res.textContent='✓ Boshlang\'ich depozit yetarli! Qo\'shimcha to\'lovsiz '+tm+' oyda '+fmt(Math.round(P*factor))+' bo\'ladi.';
     document.getElementById('cI').value='0';document.getElementById('cS').value=vi(CON,0);
   } else {
+    const mc = (goal - P * factor) / unit_fv;
     const mcR=Math.max(0,Math.ceil(mc/1000)*1000);
     res.style.background='#e6f1fb';res.style.color='#185FA5';
-    res.textContent=fmt(goal)+' maqsad uchun har oy ≈ '+fmt(mcR)+' kerak ('+months+' oy, '+pl+' tarif, '+(goalNetto*100).toFixed(2)+'% netto).';
+    res.textContent=fmt(goal)+' maqsad uchun '+(ia?'oshuvchi ':'')+FR[fr].n.toLowerCase()+' ≈ '+fmt(mcR)+' kiritish kerak ('+tm+' oy, '+(goalNetto*100).toFixed(2)+'% foyda).';
     document.getElementById('cI').value=fmtN(mcR);
     document.getElementById('cS').value=vi(CON,mcR);
   }
 
-  ia=savedIA;
-  setMo(months);
+  setMo(tm);
   calc();
 }
 
@@ -671,13 +656,11 @@ function saveScenario(){
   const P=Math.max(0,pi(document.getElementById('pI').value));
   const bc=Math.max(0,pi(document.getElementById('cI').value));
   const ir=+document.getElementById('infS').value/100;
-  const tr=+document.getElementById('taxS').value/100;
   const tm=Math.max(1,pi(document.getElementById('mI').value)||1);
-  const{nettoAnnual:sNetto,bruttoAnnual:sBrutto}=getEffectiveRate(pl,tm,PM[pl].p,tr);
-  const gaS=rateMode==='auto'?sNetto:sBrutto;
-  const S=sim(P,bc,ir,tm,gaS,PM[pl].p,tr,fr,rateMode==='auto');
+  const{nettoAnnual:sNetto}=getEffectiveRate(pl,tm,PM[pl].p);
+  const S=sim(P,bc,ir,tm,sNetto,PM[pl].p,fr);
   const nae=(Math.pow(1+S.in_,12)-1)*100;
-  scenarios.push({id:Date.now(),label:pl.charAt(0).toUpperCase()+pl.slice(1)+' · '+tm+' oy',pl,tm,P,bc,ir:ir*100,tr:tr*100,fr,ia,fn:S.fn,fr2:S.fr2,tIN:S.tIN,nae:nae.toFixed(2),be:S.be});
+  scenarios.push({id:Date.now(),label:pl.charAt(0).toUpperCase()+pl.slice(1)+' · '+tm+' oy',pl,tm,P,bc,ir:ir*100,fr,ia,fn:S.fn,fr2:S.fr2,tIN:S.tIN,nae:nae.toFixed(2),be:S.be});
   renderScenarios();
 }
 
@@ -688,7 +671,6 @@ function loadScenario(idx){
   document.getElementById('pI').value=fmtN(s.P);document.getElementById('pS').value=vi(DEP,s.P);
   document.getElementById('cI').value=fmtN(s.bc);document.getElementById('cS').value=vi(CON,s.bc);
   document.getElementById('infS').value=s.ir;document.getElementById('infO').textContent=s.ir+'%';
-  document.getElementById('taxS').value=s.tr;document.getElementById('taxO').textContent=s.tr+'%';
   ia=s.ia;
   document.getElementById('iaTr').style.background=ia?'#378ADD':'#b4b2a9';
   document.getElementById('iaTh').style.left=ia?'19px':'2px';
@@ -715,7 +697,7 @@ function renderScenarios(){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
         <div><p style="font-size:10px;color:#888780;margin:0 0 1px;">Yakuniy balans</p><p style="font-size:13px;font-weight:500;margin:0;">${fmtS(s.fn)}</p></div>
-        <div><p style="font-size:10px;color:#888780;margin:0 0 1px;">Netto stavka</p><p style="font-size:13px;font-weight:500;margin:0;">${s.nae}%</p></div>
+        <div><p style="font-size:10px;color:#888780;margin:0 0 1px;">Yillik foyda</p><p style="font-size:13px;font-weight:500;margin:0;">${s.nae}%</p></div>
         <div><p style="font-size:10px;color:#888780;margin:0 0 1px;">Break-even</p><p style="font-size:13px;font-weight:500;margin:0;">${s.be?s.be+' oy':'—'}</p></div>
       </div>
     </div>`).join('');
@@ -727,33 +709,21 @@ function calc(){
   const P=Math.max(0,pi(document.getElementById('pI').value));
   const bc=Math.max(0,pi(document.getElementById('cI').value));
   const ir=+document.getElementById('infS').value/100;
-  const tr=+document.getElementById('taxS').value/100;
   const tm=Math.max(1,pi(document.getElementById('mI').value)||1);
   const meta=PM[pl];
   updPlan();updCmp();
   document.getElementById('iaWrap').style.display=bc>0?'flex':'none';
 
-  const{nettoAnnual,bruttoAnnual}=getEffectiveRate(pl,tm,meta.p,tr);
+  const{nettoAnnual}=getEffectiveRate(pl,tm,meta.p);
 
   // Update rate UI
   if(rateMode==='auto'){
     document.getElementById('rNetto').textContent=(nettoAnnual*100).toFixed(2)+'%';
-    document.getElementById('rBrutto').textContent=(bruttoAnnual*100).toFixed(2)+'%';
-    document.getElementById('rFormula').textContent=
-      (nettoAnnual*100).toFixed(2)+'% netto ÷ ('+meta.p+'% × '+(100-tr*100).toFixed(0)+'%) = '+(bruttoAnnual*100).toFixed(2)+'% brutto';
-  } else {
-    document.getElementById('rManualBrutto').textContent=(bruttoAnnual*100).toFixed(2)+'%';
-    document.getElementById('rManualNetto').textContent=(nettoAnnual*100).toFixed(2)+'%';
-    document.getElementById('rManualFormula').textContent=
-      (bruttoAnnual*100).toFixed(2)+'% × '+meta.p+'% × '+(100-tr*100).toFixed(0)+'% = '+(nettoAnnual*100).toFixed(2)+'% netto';
   }
 
-  // sim() ga netto yillik stavka uzatiladi, rateIsNetto=true (auto) yoki false (manual)
-  const gaForSim = rateMode==='auto' ? nettoAnnual : bruttoAnnual;
-  const S=sim(P,bc,ir,tm,gaForSim,meta.p,tr,fr,rateMode==='auto');
+  // sim() ga yillik stavka uzatiladi
+  const S=sim(P,bc,ir,tm,nettoAnnual,meta.p,fr);
   lastRows=S.rows.slice(1);
-  document.getElementById('taxH').textContent=
-    'Brutto: '+(S.gross*100).toFixed(4)+'%/oy → netto: '+(S.in_*100).toFixed(4)+'%/oy';
 
   if(md==='single'){
     document.getElementById('s-fn').textContent=fmt(S.fn);
@@ -765,49 +735,25 @@ function calc(){
     document.getElementById('s-deph').textContent='Boshlang\'ich: '+fmt(P)+(S.dep-P>0?' + qo\'shimcha: '+fmt(S.dep-P):'');
     document.getElementById('s-int').textContent=fmt(S.tIN);
     document.getElementById('s-inth').textContent='Real foiz: '+fmt(Math.max(0,S.fr2-rpDep));
-    document.getElementById('s-eff').textContent=S.nae.toFixed(2)+'%';
-    document.getElementById('s-efff').textContent=
-      rateMode==='auto'
-        ? 'Jadval: '+((nettoAnnual)*100).toFixed(2)+'% netto → balans shu stavka bilan o\'sadi'
-        : (bruttoAnnual*100).toFixed(2)+'% × '+meta.p+'% × '+(100-tr*100).toFixed(0)+'% = '+S.nae.toFixed(2)+'% netto';
-    const beBar=document.getElementById('s-beBar'),beCard=document.getElementById('s-beCard');
-    if(S.be){
-      document.getElementById('s-be').textContent=S.be+' oy';
-      document.getElementById('s-beh').textContent='Real balans kiritilgandan oshadi';
-      const bp=Math.round(S.be/tm*100);
-      beBar.style.width=bp+'%';beBar.style.background='#1D9E75';
-      document.getElementById('s-beBarH').textContent=S.be+'/'+tm+' oy — muddatning '+bp+'%';
-      beCard.style.borderLeft='3px solid #1D9E75';beCard.style.borderRadius='0 12px 12px 0';
-    } else if(ir===0){
-      document.getElementById('s-be').textContent='1 oydan';
-      document.getElementById('s-beh').textContent='Inflyatsiya 0%';
-      beBar.style.width='100%';beBar.style.background='#1D9E75';
-      document.getElementById('s-beBarH').textContent='Darhol';
-      beCard.style.borderLeft='3px solid #1D9E75';beCard.style.borderRadius='0 12px 12px 0';
-    } else {
-      document.getElementById('s-be').textContent='Etmaydi';
-      document.getElementById('s-beh').textContent='Muddatni uzaytiring yoki inflyatsiyani kamaytiring';
-      beBar.style.width='0%';beBar.style.background='#E24B4A';
-      document.getElementById('s-beBarH').textContent='';
-      beCard.style.borderLeft='3px solid #E24B4A';beCard.style.borderRadius='0 12px 12px 0';
-    }
     const rn=document.getElementById('s-rn');
-    if(ir>0){rn.style.display='block';document.getElementById('s-rnt').textContent='Inflyatsiya '+Math.round(ir*100)+'% bilan '+tm+' oy davomida 1 so\'m xarid kuchi '+(1/Math.pow(1+ir,tm/12)*100).toFixed(0)+'% ga tushadi.';}
+    if(ir>0) rn.style.display='block';
     else rn.style.display='none';
   }
+  
+  // Update Inflation card title (Regardless of tab)
+  if(ir>0) document.getElementById('s-rnt').textContent='Inflyatsiya '+Math.round(ir*100)+'% bilan '+tm+' oy davomida 1 so\'m xarid kuchi '+(1/Math.pow(1+ir,tm/12)*100).toFixed(0)+'% ga tushadi.';
 
   if(md==='compare'){
     const pB=document.getElementById('c-planB').value;
     const bcB=Math.max(0,pi(document.getElementById('c-cb').value));
-    const{nettoAnnual:netB,bruttoAnnual:brutB}=getEffectiveRate(pB,tm,PM[pB].p,tr);
-    const gaB=rateMode==='auto'?netB:brutB;
-    const SB=sim(P,bcB,ir,tm,gaB,PM[pB].p,tr,fr,rateMode==='auto');
+    const{nettoAnnual:netB}=getEffectiveRate(pB,tm,PM[pB].p, 'auto');
+    const SB=sim(P,bcB,ir,tm,netB,PM[pB].p,fr);
     document.getElementById('c-planA').textContent=pl.charAt(0).toUpperCase()+pl.slice(1);
     document.getElementById('c-contribA').textContent=bc===0?'Yo\'q':fmt(bc);
     document.getElementById('c-an').textContent=fmt(S.fn);document.getElementById('c-ar').textContent=fmt(S.fr2);
-    document.getElementById('c-ae').textContent=S.nae.toFixed(2)+'%';document.getElementById('c-ab').textContent=S.be?S.be+' oy':'Etmaydi';document.getElementById('c-ai').textContent=fmt(S.tIN);
+    document.getElementById('c-ai').textContent=fmt(S.tIN);
     document.getElementById('c-bn').textContent=fmt(SB.fn);document.getElementById('c-br').textContent=fmt(SB.fr2);
-    document.getElementById('c-be2').textContent=SB.nae.toFixed(2)+'%';document.getElementById('c-bb').textContent=SB.be?SB.be+' oy':'Etmaydi';document.getElementById('c-bi').textContent=fmt(SB.tIN);
+    document.getElementById('c-bi').textContent=fmt(SB.tIN);
     const dN=SB.fn-S.fn,dR=SB.fr2-S.fr2,dI=SB.tIN-S.tIN;
     const clr=v=>v>=0?'#3B6D11':'#A32D2D';
     ['dN','dR','dI'].forEach((id,i)=>{const v=[dN,dR,dI][i];const el=document.getElementById('c-'+id);el.textContent=fmtD(v);el.style.color=clr(v);});
@@ -849,8 +795,8 @@ function calc(){
   const cL2=cL.slice(1),cE2=cE.slice(1);
   let ds,leg;
   if(chm==='monthly'){
-    ds=[{label:'Oylik netto daromad',data:cE2,borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}];
-    leg=[['#BA7517','Oylik netto daromad']];
+    ds=[{label:'Oylik foyda',data:cE2,borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}];
+    leg=[['#BA7517','Oylik foyda']];
     if(chart){chart.data.labels=cL2;chart.data.datasets=ds;chart.update();}
     else chart=new Chart(document.getElementById('ch'),{type:'line',data:{labels:cL2,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:12},color:'#888780'}},y:{grid:{color:'rgba(136,135,128,0.15)'},ticks:{callback:v=>fmtS(v),font:{size:12},color:'#888780'}}}}});
   } else {
@@ -863,9 +809,8 @@ function calc(){
     if(md==='compare'){
       const pB=document.getElementById('c-planB').value;
       const bcB=Math.max(0,pi(document.getElementById('c-cb').value));
-      const{nettoAnnual:netB2,bruttoAnnual:brutB2}=getEffectiveRate(pB,tm,PM[pB].p,tr);
-      const gaB2=rateMode==='auto'?netB2:brutB2;
-      const SB2=sim(P,bcB,ir,tm,gaB2,PM[pB].p,tr,fr,rateMode==='auto');
+      const{nettoAnnual:netB2}=getEffectiveRate(pB,tm,PM[pB].p);
+      const SB2=sim(P,bcB,ir,tm,netB2,PM[pB].p,fr);
       const cNB=[];for(let i=0;i<SB2.rows.length;i++){if(i===0||i%step===0||i===SB2.rows.length-1)cNB.push(SB2.rows[i].nom);}
       ds.push({label:'B varianti',data:cNB,borderColor:'#D85A30',backgroundColor:'transparent',borderDash:[3,3],tension:0.3,pointRadius:0,borderWidth:2});
       leg.push(['#D85A30','B varianti']);
@@ -897,7 +842,7 @@ pvI2.addEventListener('blur',()=>{pvI2.value=fmtN(pi(pvI2.value)||1000000);calc(
 pvI2.addEventListener('keydown',e=>{if(e.key==='-')e.preventDefault();if(e.key==='Enter')pvI2.blur();});
 pvI2.addEventListener('input',calc);
 
-document.getElementById('taxS').addEventListener('input',()=>{document.getElementById('taxO').textContent=document.getElementById('taxS').value+'%';calc();});
+// Continuous UI Update for Sliders
 document.getElementById('infS').addEventListener('input',()=>{document.getElementById('infO').textContent=document.getElementById('infS').value+'%';calc();});
 document.getElementById('cmS').addEventListener('input',()=>{updCmp();calc();});
 
@@ -924,11 +869,17 @@ cb2.addEventListener('blur',()=>{cb2.value=fmtN(pi(cb2.value));calc();});
 cb2.addEventListener('keydown',e=>{if(e.key==='-')e.preventDefault();if(e.key==='Enter')cb2.blur();});
 document.getElementById('c-planB').addEventListener('change',calc);
 
-renderScenarios();
-loadFromURL();
-setPlan('standard');setFr('monthly');setMo(13);setCmpM('linked');setMode('single');
-setRateMode('auto');
+function init(){
+  renderScenarios();
+  loadFromURL();
+  if(!location.search){
+    setPlan('standard');setFr('monthly');setMo(13);setCmpM('linked');setMode('single');setRateMode('auto');
+  }
+  calc();
+}
+init();
 on('ch-balance',['ch-balance','ch-monthly']);
+
 </script>
 
 <!-- PWA install hint shown when supported -->
